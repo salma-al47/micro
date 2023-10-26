@@ -1,5 +1,4 @@
- 
-pipeline {
+ pipeline {
     agent any
 
     environment {
@@ -14,9 +13,12 @@ pipeline {
                 }
             }
         }
-    stage('Build') {
+        stage('Build') {
             steps {
                sh 'docker build -t app -f api/Dockerfile .'
                sh 'docker build -t client -f client/Dockerfile .'
             }
         }
+    }
+
+    
