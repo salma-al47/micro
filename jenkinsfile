@@ -1,59 +1,21 @@
 pipeline {
     agent any
+
     environment {
-        AWS_DEFAULT_REGION = 'us-east-1' 
+        GITHUB_REPO_URL = 'https://github.com/salma-al47/micro.git'
     }
+
     stages {
-        stage('Clone repository') {
+        stage('Checkout') {
             steps {
-                 script{
-                     git(
-                         url: "https://github.com/OuaritHajar/DeployMicrosrvAPP",
-                         branch: "main",
-                         changelog: true,
-                         poll: true
-                        )
-                 }
-            } 
+                script {
+                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], doGenerateSubmoduleConfigurations: false, extensions: [], userRemoteConfigs: [[url: GITHUB_REPO_URL]]])
+                }
+            }
         }
-       stage('Build the images') {
+    stage('Build') {
             steps {
                sh 'docker build -t app -f api/Dockerfile .'
                sh 'docker build -t client -f client/Dockerfile .'
             }
         }
-
-        stage('tag the images') {
-            steps {
-                sh 'docker tag app 363379993588.dkr.ecr.us-east-1.amazonaws.com/repository:app'
-                sh 'docker tag client 363379993588.dkr.ecr.us-east-1.amazonaws.com/repository:client'
-            }
-        }
-        stage('Push to ECR') {
-            steps {
-                script {
-                    withAWS(credentials: 'aws-key', region:'${AWS_DEFAULT_REGION}') {
-                         sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 363379993588.dkr.ecr.us-east-1.amazonaws.com"
-                         sh 'docker push 363379993588.dkr.ecr.us-east-1.amazonaws.com/repository:app'
-                         sh 'docker push 363379993588.dkr.ecr.us-east-1.amazonaws.com/repository:client'
-                    }
-                }
-            }
-        }
-        stage('Deploy with docker compose'){
-            steps {
-                 script {
-                    sshagent(credentials: ['aws-private-key']) {
-                        def EC2_INSTANCE_IP = 'ec2-54-205-62-118.compute-1.amazonaws.com'
-                        sh "ssh -o StrictHostKeyChecking=no ubuntu@${EC2_INSTANCE_IP} 'mkdir -p ~/deploy'"
-                        sh "scp -o StrictHostKeyChecking=no docker-compose.yml ubuntu@${EC2_INSTANCE_IP}:~/deploy/"
-                        sh "ssh -o StrictHostKeyChecking=no ubuntu@${EC2_INSTANCE_IP} 'cd ~/deploy && \
-                           docker-compose up -d'"
-
-                   }
-                }
-            }       
-        }
-    }
- 
- }
