@@ -24,9 +24,9 @@ services:
     mongo:
         container_name: mongo
         restart: always
-        image: mongo
+        image: docker.io/library/mongo:latest  
+        build:
+        context: .
         image: salmaal/mongo:latest
-        volumes:
-            - ./data:/data/db
         ports:
             - "27017:27017"
