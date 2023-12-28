@@ -5,6 +5,7 @@ services:
         container_name: app
         restart: always
         build: ./api
+        image: salmaal/api:latest
         ports:
             - "4000:4000"
         depends_on:
@@ -14,6 +15,7 @@ services:
         container_name: client
         restart: always
         build: ./client
+        image: salmaal/client:latest
         ports:
             - "3007:3000"
         depends_on:
@@ -23,6 +25,7 @@ services:
         container_name: mongo
         restart: always
         image: mongo
+        image: salmaal/mongo:latest
         volumes:
             - ./data:/data/db
         ports:
